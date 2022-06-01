@@ -1,0 +1,10 @@
+.text {
+  font-size: 12px;
+  color: #828282;
+  transition: color 0.3s ease-in-out;
+  text-decoration: none;
+  cursor: pointer;
+}
+.text:hover {
+  color: rgb(0, 0, 0);
+}

@@ -1,11 +1,27 @@
+import { useEffect } from "react";
 import { Col, Container, Row } from "react-bootstrap";
 import NewsCard from "../../components/NewsCard/NewsCard";
-import { useAppSelector } from "../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { update } from "../../store/news-store/news-store";
+import { INews } from "../../types/INews";
+import IndexedDb from "../../util/IndexedDb";
 
 const Favorite = () => {
   const newsState = useAppSelector((state) => state.news);
-
+  const dispatch = useAppDispatch();
   const favNews = newsState.filter((n) => n.isLike);
+
+  useEffect(() => {
+    const checkData = async () => {
+      const indexedDb = new IndexedDb("show-news");
+      await indexedDb.createObjectStore(["news"], "id");
+      const values: INews[] = await indexedDb.getAllValue("news");
+      if (newsState.length === 0 && values.length > 0) {
+        dispatch(update(values));
+      }
+    };
+    checkData();
+  }, [newsState.length, dispatch]);
 
   const cards = favNews.map((n) => {
     return (

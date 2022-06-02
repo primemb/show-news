@@ -2,6 +2,7 @@ import { Card } from "react-bootstrap";
 import { useAppDispatch } from "../../store/hooks";
 import { like } from "../../store/news-store/news-store";
 import { INews } from "../../types/INews";
+import IndexedDb from "../../util/IndexedDb";
 import NewsCardFooter from "../NewsCardFooter/NewsCardFooter";
 import classes from "./NewsCard.module.css";
 interface INewsCard {
@@ -11,7 +12,11 @@ interface INewsCard {
 const NewsCard = (props: INewsCard) => {
   const { news } = props;
   const dispatch = useAppDispatch();
-  const likeNews = (event: React.MouseEvent<SVGSVGElement>) => {
+
+  const likeNews = async (event: React.MouseEvent<SVGSVGElement>) => {
+    const indexedDb = new IndexedDb("show-news");
+    await indexedDb.createObjectStore(["news"], "id");
+    await indexedDb.putValue("news", { ...news, isLike: true });
     dispatch(like(news.title));
   };
 

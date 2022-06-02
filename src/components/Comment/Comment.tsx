@@ -3,7 +3,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Col } from "react-bootstrap";
 import { useAppDispatch } from "../../store/hooks";
 import { deleteComment } from "../../store/news-store/news-store";
-import { IComments } from "../../types/INews";
+import { IComments, INews } from "../../types/INews";
+import IndexedDb from "../../util/IndexedDb";
 
 import classes from "./Comments.module.css";
 
@@ -16,7 +17,15 @@ const Comment = (props: IComment) => {
   const { id, comment } = props;
   const dispatch = useAppDispatch();
 
-  const deleteCommentHandler = () => {
+  const deleteCommentHandler = async () => {
+    const indexedDb = new IndexedDb("show-news");
+    await indexedDb.createObjectStore(["news"], "id");
+    const dbObject: INews = await indexedDb.getValue("news", id);
+
+    dbObject.comments = dbObject.comments?.filter((c) => c.id !== comment.id);
+
+    await indexedDb.putValue("news", dbObject);
+
     dispatch(deleteComment({ id, comment }));
   };
 

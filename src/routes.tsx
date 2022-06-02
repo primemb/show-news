@@ -1,14 +1,19 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
-import Favorite from "./pages/Favorite/Favorite";
+import CustomSpinner from "./components/CustomSpinner/CustomSpinner";
 import HomePage from "./pages/HomePage/HomePage";
-import SingleNews from "./pages/SingleNews/SingleNews";
+const SingleNews = lazy(() => import("./pages/SingleNews/SingleNews"));
+const Favorite = lazy(() => import("./pages/Favorite/Favorite"));
+
 const Router = () => {
   return (
-    <Routes>
-      <Route path="/fav" element={<Favorite />} />
-      <Route path="/:newsId" element={<SingleNews />}></Route>
-      <Route path="/" element={<HomePage />} />
-    </Routes>
+    <Suspense fallback={<CustomSpinner />}>
+      <Routes>
+        <Route path="/fav" element={<Favorite />} />
+        <Route path="/:newsId" element={<SingleNews />}></Route>
+        <Route path="/" element={<HomePage />} />
+      </Routes>
+    </Suspense>
   );
 };
 

@@ -5,11 +5,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import AddComment from "../../components/AddComment/AddComment";
 import Comments from "../../components/Comments/Comments";
 import { useAppSelector } from "../../store/hooks";
-import { addComment } from "../../store/news-store/news-store";
+import { addComment, update } from "../../store/news-store/news-store";
 import { IComments, INews } from "../../types/INews";
 import { v4 as uuidv4 } from "uuid";
 
 import classes from "./SingleNews.module.css";
+import IndexedDb from "../../util/IndexedDb";
 
 const SingleNews = () => {
   const newsState = useAppSelector((state) => state.news);
@@ -22,15 +23,41 @@ const SingleNews = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const newsObject = newsState.find((n) => n.id === newsId);
-    if (!newsObject) {
-      navigate("/");
-    }
-    setNews(newsObject);
-  }, [newsState, newsId, navigate]);
+    const checkDataBase = async () => {
+      const indexedDb = new IndexedDb("show-news");
+      await indexedDb.createObjectStore(["news"], "id");
+      const values: INews[] = await indexedDb.getAllValue("news");
 
-  const commentSubmitHandler = () => {
+      if (newsState.length > 0) {
+        const newsObject = newsState.find((n) => n.id === newsId);
+        if (!newsObject) {
+          navigate("/");
+        }
+        setNews(newsObject);
+      } else if (values.length > 0 && newsState.length === 0) {
+        dispatch(update(values));
+      } else if (values.length === 0 && newsState.length === 0) {
+        navigate("/");
+      }
+    };
+    checkDataBase();
+  }, [newsState, newsId, navigate, dispatch]);
+
+  const commentSubmitHandler = async () => {
+    if (newComment.trim().length === 0) return;
     const tempComment: IComments = { id: uuidv4(), comment: newComment };
+
+    const indexedDb = new IndexedDb("show-news");
+    await indexedDb.createObjectStore(["news"], "id");
+    const dbObject: INews = await indexedDb.getValue("news", newsId as string);
+    if (dbObject.comments) {
+      dbObject.comments.push(tempComment);
+    } else {
+      dbObject.comments = [tempComment];
+    }
+
+    await indexedDb.putValue("news", dbObject);
+
     dispatch(addComment({ id: newsId as string, comment: tempComment }));
   };
 
